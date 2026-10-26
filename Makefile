@@ -39,29 +39,29 @@ test: $(TESTS)
 c-test: test
 
 coverage:
-	rm -rf $(COVERAGE)
-	mkdir -p $(COVERAGE)/run $(COVERAGE)/run-errors
-	$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
+	@rm -rf $(COVERAGE)
+	@mkdir -p $(COVERAGE)/run $(COVERAGE)/run-errors
+	@$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
 		-o $(COVERAGE)/dns_table.o $(LIB_SRC)
-	$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
+	@$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
 		-o $(COVERAGE)/main.o src/main.c
-	$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
+	@$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
 		-o $(COVERAGE)/test_util.o test/test_util.c
-	$(CC) --coverage -Iinclude -Itest -o $(COVERAGE)/test_unit \
+	@$(CC) --coverage -Iinclude -Itest -o $(COVERAGE)/test_unit \
 		test/test_dns_unit.c $(COVERAGE)/test_util.o $(COVERAGE)/dns_table.o
-	$(CC) --coverage -Iinclude -Itest -o $(COVERAGE)/test_integration \
+	@$(CC) --coverage -Iinclude -Itest -o $(COVERAGE)/test_integration \
 		test/test_dns_integration.c $(COVERAGE)/test_util.o $(COVERAGE)/dns_table.o
-	$(CC) --coverage -o $(COVERAGE)/dns_app \
+	@$(CC) --coverage -o $(COVERAGE)/dns_app \
 		$(COVERAGE)/main.o $(COVERAGE)/dns_table.o
-	$(COVERAGE)/test_unit
-	$(COVERAGE)/test_integration
-	printf '1\ncoverage.example.com\n192.0.2.1\n2\ncoverage.example.com\n3\ncoverage.example.com\n192.0.2.2\n5\n6\n7\n4\ncoverage.example.com\n0\n' | \
-		(cd $(COVERAGE)/run && ../dns_app)
-	printf '# comment\nbad..domain 192.0.2.1\n' > $(COVERAGE)/run-errors/dns_records.txt
-	printf 'x\n\n8\n2\nmissing.example.com\n3\nmissing.example.com\n192.0.2.3\n4\nbad..domain\n5\n6\n7\n' | \
-		(cd $(COVERAGE)/run-errors && ../dns_app)
-	gcov -b -c -o $(COVERAGE) src/dns_table.c src/main.c
-	mv -f dns_table.c.gcov main.c.gcov $(COVERAGE)/
+	@$(COVERAGE)/test_unit >/dev/null
+	@$(COVERAGE)/test_integration >/dev/null
+	@printf '1\ncoverage.example.com\n192.0.2.1\n2\ncoverage.example.com\n3\ncoverage.example.com\n192.0.2.2\n5\n6\n7\n4\ncoverage.example.com\n0\n' | \
+		(cd $(COVERAGE)/run && ../dns_app >/dev/null)
+	@printf '# comment\nbad..domain 192.0.2.1\n' > $(COVERAGE)/run-errors/dns_records.txt
+	@printf 'x\n\n8\n2\nmissing.example.com\n3\nmissing.example.com\n192.0.2.3\n4\nbad..domain\n5\n6\n7\n' | \
+		(cd $(COVERAGE)/run-errors && ../dns_app >/dev/null)
+	@gcov -b -c -o $(COVERAGE) src/dns_table.c src/main.c
+	@mv -f dns_table.c.gcov main.c.gcov $(COVERAGE)/
 
 $(BUILD)/dns_table_gtest.o: $(LIB_SRC) include/dns_table.h | $(BUILD)
 	$(CC) $(ALL) -c -o $@ $(LIB_SRC)
