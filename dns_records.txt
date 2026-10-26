@@ -1,0 +1,9 @@
+# DNS Records -- managed by dns_app
+# Format  : domain ip   (one record per line, space-separated)
+# Comments: lines starting with '#' are ignored on import
+# Tip     : edit this file by hand, then use menu option 8 to reload
+
+example.com 93.184.216.34
+github.com 140.82.121.3
+google.com 142.250.195.78
+

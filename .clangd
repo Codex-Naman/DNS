@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - "-Iinclude"
+    - "-Itest"
+    - "-std=c99"
+    - "-Wall"
+    - "-Wextra"

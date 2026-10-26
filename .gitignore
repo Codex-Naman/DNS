@@ -1,0 +1,16 @@
+# Generated build output
+/build/*
+!/build/.gitkeep
+
+# Coverage output
+/coverage/
+*.gcda
+*.gcno
+*.gcov
+
+# Local editor/cache files
+/.cache/
+
+# Temporary runtime files
+*.tmp
+*.log

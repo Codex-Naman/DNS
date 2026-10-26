@@ -1,0 +1,12 @@
+[
+  {
+    "directory": "/home/naman/Downloads/POC/DNS(Final_Version)",
+    "command": "cc -std=c99 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wundef -Wswitch-enum -Wswitch-default -O2 -g -Iinclude -Itest -o build/dns_app src/main.c src/dns_table.c",
+    "file": "src/main.c"
+  },
+  {
+    "directory": "/home/naman/Downloads/POC/DNS(Final_Version)",
+    "command": "cc -std=c99 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wundef -Wswitch-enum -Wswitch-default -O2 -g -Iinclude -Itest -o build/dns_app src/main.c src/dns_table.c",
+    "file": "src/dns_table.c"
+  }
+]
