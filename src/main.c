@@ -126,13 +126,14 @@ static bool parse_txt_line(const char *line, char *domain, size_t dom_len,
   if ((line[i] != '\0') && (line[i] != '\n') && (line[i] != '\r')) {
     char *end = NULL;
     long long parsed_created;
-    long long parsed_updated;
 
     errno = 0;
     parsed_created = strtoll(&line[i], &end, 10);
     if ((end == &line[i]) || (errno != 0) || (parsed_created <= 0LL)) {
       timestamps_ok = false;
     } else {
+      long long parsed_updated;
+
       *created_at = (time_t)parsed_created;
       i = (size_t)(end - line);
       while ((line[i] == ' ') || (line[i] == '\t')) {
@@ -369,9 +370,10 @@ static void handle_add(dns_table_t *table) {
 
 static void handle_resolve(const dns_table_t *table) {
   char domain[INPUT_BUF_LEN];
-  char ip[DNS_IP_BUF_LEN];
 
   if (read_line("Domain name : ", domain, sizeof(domain))) {
+    char ip[DNS_IP_BUF_LEN];
+
     const dns_status_t st = dns_resolve(table, domain, ip, sizeof(ip));
     if (st == DNS_OK) {
       (void)printf("%s -> %s\n", domain, ip);
@@ -381,7 +383,7 @@ static void handle_resolve(const dns_table_t *table) {
   }
 }
 
-static void handle_update(dns_table_t *table) {
+static void handle_update(const dns_table_t *table) {
   char domain[INPUT_BUF_LEN];
   char ip[INPUT_BUF_LEN];
 
@@ -457,9 +459,8 @@ static void print_menu(void) {
 /* ------------------------------------------------------------------ */
 int main(void) {
   int exit_code = 0;
-  bool running = true;
   dns_table_t *table = dns_table_create();
-
+  
   if (table == NULL) {
     (void)printf("Error: %s\n", dns_status_string(DNS_ERR_NOMEM));
     exit_code = 1;
@@ -469,7 +470,7 @@ int main(void) {
 
     char choice[INPUT_BUF_LEN];
 
-    while (running) {
+    for (bool running = true; running;) {
       print_menu();
       if (!read_line("Choice: ", choice, sizeof(choice))) {
         running = false; /* EOF / Ctrl-D */

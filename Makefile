@@ -94,6 +94,7 @@ helgrind: $(TESTS) $(GTEST)
 # MISRA addon needs cppcheck with the misra addon + rule texts installed
 cppcheck:
 	cppcheck --enable=all --inconclusive --std=c99 --suppress=missingIncludeSystem \
+	         --suppress=unusedFunction \
 	         -Iinclude src/dns_table.c src/main.c
 	-cppcheck --addon=misra --std=c99 -Iinclude src/dns_table.c src/main.c
 

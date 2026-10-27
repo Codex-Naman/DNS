@@ -46,6 +46,7 @@ static void dns_free(void *p)
     }
 }
 
+// cppcheck-suppress unusedFunction
 size_t dns_live_allocations(void)
 {
     return g_live_allocations;
@@ -73,9 +74,9 @@ static char to_lower_char(char c)
 
 static void copy_str(char *dst, size_t dst_size, const char *src)
 {
-    size_t i = 0U;
     if ((dst != NULL) && (src != NULL) && (dst_size > 0U))
     {
+        size_t i = 0u;
         while ((i < (dst_size - 1U)) && (src[i] != '\0'))
         {
             dst[i] = src[i];
@@ -91,18 +92,20 @@ static time_t current_timestamp(void)
     return (now == (time_t)-1) ? (time_t)0 : now;
 }
 
+
 /* ------------------------------------------------------------------ */
 /* Validation                                                          */
 /* ------------------------------------------------------------------ */
 bool dns_is_valid_domain(const char *domain)
 {
-    bool   ok = (domain != NULL);
-    size_t i = 0U;
-    size_t label_len = 0U;
-    char   prev = '.';
+    bool ok = (domain != NULL);
 
     if (ok)
     {
+        size_t i = 0U;
+        size_t label_len = 0U;
+        char prev = '.';
+
         while (ok && (domain[i] != '\0'))
         {
             const char c = domain[i];
@@ -156,14 +159,15 @@ bool dns_is_valid_domain(const char *domain)
 
 bool dns_is_valid_ip(const char *ip)
 {
-    bool     ok = (ip != NULL);
-    size_t   i = 0U;
-    uint32_t value = 0U;
-    uint32_t digits = 0U;
-    uint32_t dots = 0U;
+    bool ok = (ip != NULL);
 
     if (ok)
     {
+        size_t i = 0U;
+        uint32_t value = 0U;
+        uint32_t digits = 0U;
+        uint32_t dots = 0U;
+
         while (ok && (ip[i] != '\0'))
         {
             const char c = ip[i];
@@ -213,11 +217,12 @@ bool dns_is_valid_ip(const char *ip)
 /* Validate and convert to canonical lower-case key. key >= 254 bytes. */
 static bool make_key(const char *domain, char *key)
 {
-    bool   ok = dns_is_valid_domain(domain);
-    size_t i = 0U;
+    bool ok = dns_is_valid_domain(domain);
 
     if (ok)
     {
+        size_t i = 0U;
+
         while (domain[i] != '\0')
         {
             key[i] = to_lower_char(domain[i]);
@@ -234,13 +239,11 @@ static bool make_key(const char *domain, char *key)
 static uint32_t hash_key(const char *key)   /* FNV-1a, 32 bit */
 {
     uint32_t h = 2166136261U;
-    size_t   i = 0U;
 
-    while (key[i] != '\0')
+    for (size_t i = 0U; key[i] != '\0'; i++)
     {
         h ^= (uint32_t)(unsigned char)key[i];
         h *= 16777619U;
-        i++;
     }
     return h;
 }
@@ -431,7 +434,7 @@ dns_status_t dns_resolve(const dns_table_t *table, const char *domain,
     return status;
 }
 
-dns_status_t dns_update_at(dns_table_t *table, const char *domain, const char *ip,
+dns_status_t dns_update_at(const dns_table_t *table, const char *domain, const char *ip,
                            time_t updated_at)
 {
     dns_status_t status = DNS_OK;
@@ -466,7 +469,7 @@ dns_status_t dns_update_at(dns_table_t *table, const char *domain, const char *i
     return status;
 }
 
-dns_status_t dns_update(dns_table_t *table, const char *domain, const char *ip)
+dns_status_t dns_update(const dns_table_t *table, const char *domain, const char *ip)
 {
     return dns_update_at(table, domain, ip, current_timestamp());
 }

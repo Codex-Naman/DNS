@@ -56,8 +56,8 @@ dns_status_t dns_add_at(dns_table_t *table, const char *domain, const char *ip,
                         time_t created_at, time_t updated_at);
 dns_status_t dns_resolve(const dns_table_t *table, const char *domain,
                          char *ip_out, size_t ip_out_len);
-dns_status_t dns_update(dns_table_t *table, const char *domain, const char *ip);
-dns_status_t dns_update_at(dns_table_t *table, const char *domain, const char *ip,
+dns_status_t dns_update(const dns_table_t *table, const char *domain, const char *ip);
+dns_status_t dns_update_at(const dns_table_t *table, const char *domain, const char *ip,
                            time_t updated_at);
 dns_status_t dns_delete(dns_table_t *table, const char *domain);
 
