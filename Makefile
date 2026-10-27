@@ -15,8 +15,10 @@ TESTS   := $(BUILD)/test_dns_unit $(BUILD)/test_dns_integration
 GTEST   := $(BUILD)/test_dns_gtest
 GXX     ?= g++
 GTEST_LIBS ?= -lgtest -lgtest_main -pthread
+ASSEMBLY := /tmp/dns-assembly
+MISRA_BUILD := /tmp/dns-cppcheck-build
 
-.PHONY: all test gtest c-test coverage sanitize valgrind helgrind cppcheck clean
+.PHONY: all test gtest c-test coverage sanitize valgrind helgrind cppcheck assembly clean
 
 all: $(APP) $(TESTS)
 
@@ -40,7 +42,9 @@ c-test: test
 
 coverage:
 	@rm -rf $(COVERAGE)
-	@mkdir -p $(COVERAGE)/run $(COVERAGE)/run-errors
+	@mkdir -p $(COVERAGE)/run $(COVERAGE)/run-errors \
+		$(COVERAGE)/run-timestamps $(COVERAGE)/run-missing \
+		$(COVERAGE)/run-overflow $(COVERAGE)/run-file-errors
 	@$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
 		-o $(COVERAGE)/dns_table.o $(LIB_SRC)
 	@$(CC) $(CSTD) $(WARN) -O0 -g --coverage $(INC) -c \
@@ -60,6 +64,17 @@ coverage:
 	@printf '# comment\nbad..domain 192.0.2.1\n' > $(COVERAGE)/run-errors/dns_records.txt
 	@printf 'x\n\n8\n2\nmissing.example.com\n3\nmissing.example.com\n192.0.2.3\n4\nbad..domain\n5\n6\n7\n' | \
 		(cd $(COVERAGE)/run-errors && ../dns_app >/dev/null)
+	@# Exercise optional timestamps, malformed timestamps, comments, whitespace, and invalid records.
+	@printf '# comment\n\n   alpha.example 192.0.2.10 100 200\nbadtime.example 192.0.2.11 nope 200\nbadupdate.example 192.0.2.12 100 nope\nnegative.example 192.0.2.13 -1 200\ntrailing.example 192.0.2.14 100 200 junk\nextra.example 192.0.2.15\nalpha.example 192.0.2.99 300 400\ninvalid..example 192.0.2.16 100 200\n' > $(COVERAGE)/run-timestamps/dns_records.txt
+	@printf '8\n5\n7\n0\n' | (cd $(COVERAGE)/run-timestamps && ../dns_app >/dev/null)
+	@# Exercise missing-file import and empty-table display/export paths.
+	@printf '8\n5\n7\n0\n' | (cd $(COVERAGE)/run-missing && ../dns_app >/dev/null)
+	@# Exercise long input draining and CRLF input handling.
+	@printf '%0300d\n0\r\n' 0 | (cd $(COVERAGE)/run-overflow && ../dns_app >/dev/null)
+	@# Force text/CSV output open failures by using directories at the target paths.
+	@mkdir -p $(COVERAGE)/run-file-errors/dns_records.txt $(COVERAGE)/run-file-errors/dns_records.csv
+	@printf '1\nnew.example\n192.0.2.1\n7\n8\n0\n' | \
+		(cd $(COVERAGE)/run-file-errors && ../dns_app >/dev/null)
 	@gcov -b -c -o $(COVERAGE) src/dns_table.c src/main.c
 	@mv -f dns_table.c.gcov main.c.gcov $(COVERAGE)/
 
@@ -91,12 +106,31 @@ helgrind: $(TESTS) $(GTEST)
 	valgrind --tool=helgrind --error-exitcode=1 $(BUILD)/test_dns_integration
 	valgrind --tool=helgrind --error-exitcode=1 $(GTEST)
 
+assembly:
+	@mkdir -p $(ASSEMBLY)
+	@$(CC) $(CSTD) -Iinclude -S -O1 $(LIB_SRC) -o $(ASSEMBLY)/dns_table_O1.s
+	@$(CC) $(CSTD) -Iinclude -S -O2 $(LIB_SRC) -o $(ASSEMBLY)/dns_table_O2.s
+	@$(CC) $(CSTD) -Iinclude -S -O3 $(LIB_SRC) -o $(ASSEMBLY)/dns_table_O3.s
+	@$(CC) $(CSTD) -Iinclude -S -O1 src/main.c -o $(ASSEMBLY)/main_O1.s
+	@$(CC) $(CSTD) -Iinclude -S -O2 src/main.c -o $(ASSEMBLY)/main_O2.s
+	@$(CC) $(CSTD) -Iinclude -S -O3 src/main.c -o $(ASSEMBLY)/main_O3.s
+	@echo "Assembly size comparison (src/dns_table.c):"
+	@wc -c $(ASSEMBLY)/dns_table_O1.s $(ASSEMBLY)/dns_table_O2.s $(ASSEMBLY)/dns_table_O3.s
+	@echo "Assembly line comparison:"
+	@wc -l $(ASSEMBLY)/dns_table_O1.s $(ASSEMBLY)/dns_table_O2.s $(ASSEMBLY)/dns_table_O3.s
+	@echo "Assembly size comparison (src/main.c):"
+	@wc -c $(ASSEMBLY)/main_O1.s $(ASSEMBLY)/main_O2.s $(ASSEMBLY)/main_O3.s
+	@echo "Assembly line comparison:"
+	@wc -l $(ASSEMBLY)/main_O1.s $(ASSEMBLY)/main_O2.s $(ASSEMBLY)/main_O3.s
+
 # MISRA addon needs cppcheck with the misra addon + rule texts installed
 cppcheck:
-	cppcheck --enable=all --inconclusive --std=c99 --suppress=missingIncludeSystem \
-	         --suppress=unusedFunction \
+	cppcheck --enable=all --inconclusive --std=c99 \
+	         --suppress=missingIncludeSystem --suppress=unusedFunction \
 	         -Iinclude src/dns_table.c src/main.c
-	-cppcheck --addon=misra --std=c99 -Iinclude src/dns_table.c src/main.c
+	@mkdir -p $(MISRA_BUILD)
+	cppcheck --cppcheck-build-dir=$(MISRA_BUILD) --addon=misra \
+	         --std=c99 -Iinclude src/dns_table.c src/main.c
 
 clean:
 	rm -rf $(BUILD)/*
